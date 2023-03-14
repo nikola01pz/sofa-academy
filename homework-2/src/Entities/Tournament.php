@@ -1,6 +1,6 @@
 <?php
 
-namespace Sofa\Homework\src\Entities;
+namespace Sofa\Homework;
 
 class Tournament
 {

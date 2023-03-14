@@ -1,6 +1,6 @@
 <?php
 
-namespace Sofa\Homework\src\Entities;
+namespace Sofa\Homework;
 
 class Slugger
 {
@@ -11,7 +11,6 @@ class Slugger
         $slug = preg_replace("/[^A-Za-z0-9_ ]/", "", $slug);
         $slug = preg_replace("/\s\s+/", " ", $slug);
         $slug = trim(strtolower($slug));
-        $slug = str_replace(" ", "-", $slug);
-        return $slug;
+        return str_replace(" ", "-", $slug);
     }
 }
