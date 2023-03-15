@@ -10,6 +10,5 @@ class Sport
         public string $id,
         public array $tournaments,
     ) {
-
     }
 }

@@ -4,7 +4,7 @@ namespace Sofa\Homework;
 
 include __DIR__.'/../src/Autoloader.php';
 
-use DateTimeImmutable;
+use PDO;
 
 if(!isset($argv[1]))
 {
@@ -19,14 +19,17 @@ if(!isset($argv[1]))
     }
 }
 
+
+$result = (object)[];
+
 if(isJson($data)){
     $result = parseJson($data);
-    var_dump($result);
 } elseif (isXml($data))
 {
     $result = parseXml($data);
-    var_dump($result);
 }
+
+insertData($result);
 
 function isValidType($fileName): bool
 {
@@ -65,72 +68,40 @@ function isXml($data): bool
 function parseJson($data): Sport
 {
     $jsonData = json_decode($data, true);
-    $slugger = new Slugger();
-    $sport = new Sport(
-        $jsonData['name'],
-        $slugger->slugify($jsonData['name']),
-        $jsonData['id'],
-        array()
-    );
-
-    foreach($jsonData['tournaments'] as $tournament)
-    {
-        $sport_tournament = new Tournament(
-            $tournament['name'],
-            $slugger->slugify($tournament['name']),
-            $tournament['id'],
-            array()
-        );
-        $sport->tournaments[] = $sport_tournament;
-
-        foreach($tournament['events'] as $event)
-        {
-            $sport_event = new Event(
-                $event['id'],
-                $event['home_team_id'],
-                $event['away_team_id'],
-                new DateTimeImmutable($event['start_date']),
-                $event['home_score'],
-                $event['away_score']
-            );
-            $sport_tournament->events[] = $sport_event;
-        }
-    }
-    return $sport;
+    $parser = new JsonFeedParser(new Slugger());
+    return $parser->parse($jsonData);
 }
 
 function parseXml($data): Sport
 {
     $xmlData = simplexml_load_string($data);
-    $slugger = new Slugger();
-    $sport = new Sport(
-        $xmlData->Name,
-        $slugger->slugify($xmlData->Name),
-        $xmlData->Id,
-        array()
-    );
+    $parser = new XmlFeedParser(new Slugger());
+    return $parser->parse($xmlData);
+}
 
-    foreach($xmlData->Tournaments as $tournament)
-    {
-        $sport_tournament = new Tournament(
-            $tournament->Name,
-            $slugger->slugify($tournament->Name),
-            $tournament->Id,
-            array()
-        );
-        $sport->tournaments[] = $sport_tournament;
+function insertData(Sport $sport): void
+{
+    $dsn = 'pgsql:host=localhost;dbname=postgres';
+    $conn = new PDO($dsn.';user=sofa;password=sofa');
 
-        foreach($tournament->Events as $event)
-        {
-            $sport_event = new Event(
-                $event->Id,
-                $event->HomeTeamId,
-                $event->AwayTeamId,
-                new DateTimeImmutable($event->StartDate),
-                isset($event->HomeScore) ? (int) $event->HomeScore : null,
-                isset($event->AwayScore) ? (int) $event->AwayScore : null);
-            $sport_tournament->events[] = $sport_event;
+    $stmt = $conn->prepare('INSERT INTO sports (name, slug, external_id) VALUES (?, ?, ?)');
+    $stmt->execute([$sport->name, $sport->slug, $sport->id]);
+    $sportID = $conn->lastInsertId();
+    foreach($sport->tournaments as $tournament){
+        $stmt = $conn->prepare('INSERT INTO tournaments (name, slug, external_id) VALUES (?, ?, ?)');
+        $stmt->execute([$tournament->name, $tournament->slug, $tournament->id]);
+
+        $tournamentID = $conn->lastInsertId();
+        $stmt = $conn->prepare('INSERT INTO sport_tournaments (sport_id, tournament_id) VALUES (?, ?)');
+        $stmt->execute([$sportID, $tournamentID]);
+
+        foreach($tournament->events as $event){
+            $stmt = $conn->prepare('INSERT INTO events (external_id, home_team_id, away_team_id, start_date, home_score, away_score) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$event->id, $event->homeTeamId, $event->awayTeamId, $event->startDate->format('Y-m-d H:i:s'), $event->homeScore, $event->awayScore]);
+
+            $eventID = $conn->lastInsertId();
+            $stmt = $conn->prepare('INSERT INTO tournament_events (tournament_id, event_id) VALUES (?, ?)');
+            $stmt->execute([$tournamentID, $eventID]);
         }
     }
-    return $sport;
 }
