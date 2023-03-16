@@ -9,40 +9,37 @@ use PDO;
 if(!isset($argv[1]))
 {
     exit("No filename provided\n");
-} else
-{
+} else {
     if(isValidType($argv[1])){
         $filePath = __DIR__.'/../data/'.$argv[1];
         $data = file_get_contents($filePath);
-    }else{
+    } else {
         exit("File type is not valid\n");
     }
 }
 
+$parsedData = (object)[];
 
-$result = (object)[];
-
-if(isJson($data)){
-    $result = parseJson($data);
-} elseif (isXml($data))
+if(isJson($data))
 {
-    $result = parseXml($data);
+    $parsedData = parseJson($data);
+} elseif (isXml($data)) {
+    $parsedData = parseXml($data);
 }
 
-insertData($result);
+if(isset($parsedData)){
+    insertData($parsedData);
+}
 
 function isValidType($fileName): bool
 {
-    $jsonType = ".json";
-    $xmlType = ".xml";
     if (
-        substr_compare($fileName, $jsonType, -strlen($jsonType)) === 0 or
-        substr_compare($fileName, $xmlType, -strlen($xmlType)) === 0
+        str_ends_with( $fileName, ".json") or
+        str_ends_with( $fileName, ".xml")
     ) {
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 function isJson($data): bool
@@ -60,9 +57,8 @@ function isXml($data): bool
     if ($xmlData === FALSE)
     {
         exit("Your file is not proper json or xml format\n");
-    }else{
-        return true;
     }
+    return true;
 }
 
 function parseJson($data): Sport
@@ -84,24 +80,67 @@ function insertData(Sport $sport): void
     $dsn = 'pgsql:host=localhost;dbname=postgres';
     $conn = new PDO($dsn.';user=sofa;password=sofa');
 
-    $stmt = $conn->prepare('INSERT INTO sports (name, slug, external_id) VALUES (?, ?, ?)');
-    $stmt->execute([$sport->name, $sport->slug, $sport->id]);
+    insertSport($conn, $sport);
     $sportID = $conn->lastInsertId();
-    foreach($sport->tournaments as $tournament){
-        $stmt = $conn->prepare('INSERT INTO tournaments (name, slug, external_id) VALUES (?, ?, ?)');
-        $stmt->execute([$tournament->name, $tournament->slug, $tournament->id]);
 
+    foreach($sport->tournaments as $tournament){
+        insertTournament($conn, $tournament);
         $tournamentID = $conn->lastInsertId();
-        $stmt = $conn->prepare('INSERT INTO sport_tournaments (sport_id, tournament_id) VALUES (?, ?)');
-        $stmt->execute([$sportID, $tournamentID]);
+        insertSportTournament($conn, $sportID, $tournamentID);
 
         foreach($tournament->events as $event){
-            $stmt = $conn->prepare('INSERT INTO events (external_id, home_team_id, away_team_id, start_date, home_score, away_score) VALUES (?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$event->id, $event->homeTeamId, $event->awayTeamId, $event->startDate->format('Y-m-d H:i:s'), $event->homeScore, $event->awayScore]);
-
+            insertEvent($conn, $event);
             $eventID = $conn->lastInsertId();
-            $stmt = $conn->prepare('INSERT INTO tournament_events (tournament_id, event_id) VALUES (?, ?)');
-            $stmt->execute([$tournamentID, $eventID]);
+            insertTournamentEvent($conn, $tournamentID, $eventID);
         }
     }
+}
+
+function insertSport($conn, $sport): void
+{
+    $stmt = $conn->prepare('
+        INSERT INTO sports (name, slug, external_id) 
+        VALUES (?, ?, ?)');
+    $stmt->execute([$sport->name,
+                    $sport->slug,
+                    $sport->id]);
+}
+
+function insertTournament($conn, $tournament): void
+{
+    $stmt = $conn->prepare('
+        INSERT INTO tournaments (name, slug, external_id) 
+        VALUES (?, ?, ?)');
+    $stmt->execute([$tournament->name,
+                    $tournament->slug,
+                    $tournament->id]);
+}
+
+function insertSportTournament($conn, $sportID, $tournamentID): void
+{
+    $stmt = $conn->prepare('
+        INSERT INTO sport_tournaments (sport_id, tournament_id) 
+        VALUES (?, ?)');
+    $stmt->execute([$sportID, $tournamentID]);
+}
+
+function insertEvent($conn, $event): void
+{
+    $stmt = $conn->prepare('
+        INSERT INTO events (external_id, home_team_id, away_team_id, start_date, home_score, away_score) 
+        VALUES (?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$event->id,
+                    $event->homeTeamId,
+                    $event->awayTeamId,
+                    $event->startDate->format('Y-m-d H:i'),
+                    $event->homeScore,
+                    $event->awayScore]);
+}
+
+function insertTournamentEvent($conn, $tournamentID, $eventID): void
+{
+    $stmt = $conn->prepare('
+        INSERT INTO tournament_events (tournament_id, event_id) 
+        VALUES (?, ?)');
+    $stmt->execute([$tournamentID, $eventID]);
 }

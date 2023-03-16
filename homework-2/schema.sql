@@ -37,3 +37,6 @@ CREATE TABLE tournament_events(
 	constraint fk_tournament_events_from_events foreign key (event_id) references events(id),
 	constraint pk_tournament_events primary key (tournament_id, event_id)
 );
+
+
+
