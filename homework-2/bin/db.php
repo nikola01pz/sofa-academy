@@ -127,3 +127,17 @@ function selectEvent($conn, $eventID): array
     $stmt->execute([$eventID]);
     return $stmt->fetch();
 }
+
+function selectSport($conn, $slug): array
+{
+    $stmt = $conn->prepare("SELECT * FROM sports WHERE slug=?");
+    $stmt->execute([$slug]);
+    return $stmt->fetch();
+}
+
+function selectTournament($conn, $slug): array
+{
+    $stmt = $conn->prepare("SELECT * FROM tournaments WHERE slug=?");
+    $stmt->execute([$slug]);
+    return $stmt->fetch();
+}

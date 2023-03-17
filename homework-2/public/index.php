@@ -43,7 +43,7 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
 
             if(isset($_GET["page"]) and $_GET["page"]=="sport")
             {
-                if(isset($_GET["slug"]))
+                if(isset($_GET["slug"]) and !empty($_GET["slug"]))
                 {
                     ?>
                         <tr>
@@ -67,7 +67,7 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
 
             if(isset($_GET["page"]) and $_GET["page"]=="tournament")
             {
-                if($_GET["slug"] and !empty($_GET["slug"]))
+                if(isset($_GET["slug"]) and !empty($_GET["slug"]))
                 {
                     ?>
                     <tr>
@@ -99,8 +99,6 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                         <th colspan="7">Event details</th>
                     </tr>
                     <tr>
-                        <th>Event id</th>
-                        <th>Event external id</th>
                         <th>Home team id</th>
                         <th>Away team id</th>
                         <th>Start date</th>
@@ -112,8 +110,6 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                     $event = selectEvent($conn, $_GET["id"]);
                         ?>
                         <tr>
-                            <td><?= $event["id"] ?></td>
-                            <td><?= $event["external_id"] ?></td>
                             <td><?= $event["home_team_id"] ?></td>
                             <td><?= $event["away_team_id"] ?></td>
                             <td><?= $event["start_date"] ?></td>
