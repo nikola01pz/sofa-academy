@@ -38,5 +38,16 @@ CREATE TABLE tournament_events(
 	constraint pk_tournament_events primary key (tournament_id, event_id)
 );
 
+DROP TABLE sport_tournaments;
+DROP TABLE tournament_events;
+DROP TABLE events;
+DROP TABLE tournaments;
+DROP TABLE sports;
+
+SElECT * FROM sport_tournaments;
+SElECT * FROM tournament_events;
+SElECT * FROM events;
+SElECT * FROM tournaments;
+SElECT * FROM sports;
 
 
