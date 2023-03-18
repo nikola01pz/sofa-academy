@@ -26,8 +26,8 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
         <tbody>
         <?php
             if (empty($_GET)){
-                $sports = selectSports($conn);
-                foreach($sports as $sport)
+                $sports = selectAllSports ($conn);
+                foreach ($sports as $sport)
                 {
                     ?>
                     <tr>
@@ -41,17 +41,17 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                 }
             }
 
-            if(isset($_GET["page"]) and $_GET["page"]=="sport")
+            if (isset($_GET["page"]) and $_GET["page"]=="sport")
             {
-                if(isset($_GET["slug"]) and !empty($_GET["slug"]))
+                if (isset($_GET["slug"]) and !empty($_GET["slug"]))
                 {
                     ?>
                         <tr>
                             <th colspan="2">Sport tournaments</th>
                         </tr>
                     <?php
-                    $sportTournaments = selectSportTournaments($conn, $_GET["slug"]);
-                    foreach($sportTournaments as $sportTournament)
+                    $sportTournaments = selectSportTournaments ($conn, $_GET["slug"]);
+                    foreach ($sportTournaments as $sportTournament)
                     {
                         ?>
                         <tr>
@@ -65,9 +65,9 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                 }
             }
 
-            if(isset($_GET["page"]) and $_GET["page"]=="tournament")
+            if (isset($_GET["page"]) and $_GET["page"]=="tournament")
             {
-                if(isset($_GET["slug"]) and !empty($_GET["slug"]))
+                if (isset($_GET["slug"]) and !empty($_GET["slug"]))
                 {
                     ?>
                     <tr>
@@ -75,8 +75,8 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                     </tr>
 
                     <?php
-                    $tournamentEvents = selectTournamentEvents($conn, $_GET["slug"]);
-                    foreach($tournamentEvents as $tournamentEvent)
+                    $tournamentEvents = selectTournamentEvents ($conn, $_GET["slug"]);
+                    foreach ($tournamentEvents as $tournamentEvent)
                     {
                         ?>
                         <tr>
@@ -90,9 +90,9 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                 }
             }
 
-            if(isset($_GET["page"]) and $_GET["page"]=="event")
+            if (isset($_GET["page"]) and $_GET["page"]=="event")
             {
-                if($_GET["id"] and !empty($_GET["id"]))
+                if ($_GET["id"] and !empty($_GET["id"]))
                 {
                     ?>
                     <tr>
@@ -107,7 +107,7 @@ $conn = new PDO($dsn.';user=sofa;password=sofa');
                     </tr>
 
                     <?php
-                    $event = selectEvent($conn, $_GET["id"]);
+                    $event = selectEvent ($conn, $_GET["id"]);
                         ?>
                         <tr>
                             <td><?= $event["home_team_id"] ?></td>

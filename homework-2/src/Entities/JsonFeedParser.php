@@ -13,43 +13,44 @@ readonly class JsonFeedParser
     ){
     }
 
-    public function parse(array $jsonData): Sport{
-        $sport = $this->createSport($jsonData);
-        foreach($jsonData['tournaments'] as $tournament)
+    public function parse (array $jsonData): Sport
+    {
+        $sport = $this->createSport ($jsonData);
+        foreach ($jsonData['tournaments'] as $tournament)
         {
-            $sport_tournament = $this->createTournament($tournament);
+            $sport_tournament = $this->createTournament ($tournament);
             $sport->tournaments[] = $sport_tournament;
 
-            foreach($tournament['events'] as $event)
+            foreach ($tournament['events'] as $event)
             {
-                $sport_event = $this->createEvent($event);
+                $sport_event = $this->createEvent ($event);
                 $sport_tournament->events[] = $sport_event;
             }
         }
         return $sport;
     }
 
-    private function createSport($jsonData): Sport
+    private function createSport ($jsonData): Sport
     {
         return new Sport(
             $jsonData['name'],
-            $this->slugger->slugify($jsonData['name']),
+            $this->slugger->slugify ($jsonData['name']),
             $jsonData['id'],
             array()
         );
     }
 
-    private function createTournament($tournament): Tournament
+    private function createTournament ($tournament): Tournament
     {
         return new Tournament(
             $tournament['name'],
-            $this->slugger->slugify($tournament['name']),
+            $this->slugger->slugify ($tournament['name']),
             $tournament['id'],
             array()
         );
     }
 
-    private function createEvent($event): Event
+    private function createEvent ($event): Event
     {
         return new Event(
             $event['id'],

@@ -14,37 +14,39 @@ readonly class XmlFeedParser
     ){
     }
 
-    public function parse(SimpleXMLElement $xmlData): Sport
+    public function parse (SimpleXMLElement $xmlData): Sport
     {
-        $sport = $this->createSport($xmlData);
+        $sport = $this->createSport ($xmlData);
 
-        foreach ($xmlData->Tournaments as $tournament) {
-            $sport_tournament = $this->createTournament($tournament);
+        foreach ($xmlData->Tournaments as $tournament)
+        {
+            $sport_tournament = $this->createTournament ($tournament);
             $sport->tournaments[] = $sport_tournament;
 
-            foreach ($tournament->Events as $event) {
-                $sport_event = $this->createEvent($event);
+            foreach ($tournament->Events as $event)
+            {
+                $sport_event = $this->createEvent ($event);
                 $sport_tournament->events[] = $sport_event;
             }
         }
         return $sport;
     }
 
-    private function createSport($xmlData): Sport
+    private function createSport ($xmlData): Sport
     {
         return new Sport(
             $xmlData->Name,
-            $this->slugger->slugify($xmlData->Name),
+            $this->slugger->slugify ($xmlData->Name),
             $xmlData->Id,
             array()
         );
     }
 
-    private function createTournament($tournament): Tournament
+    private function createTournament ($tournament): Tournament
     {
         return new Tournament(
             $tournament->Name,
-            $this->slugger->slugify($tournament->Name),
+            $this->slugger->slugify ($tournament->Name),
             $tournament->Id,
             array()
         );

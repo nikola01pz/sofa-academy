@@ -4,7 +4,7 @@ namespace Sofa\Homework;
 
 class Slugger
 {
-    public function slugify($title): string
+    public function slugify ($title): string
     {
         $slug = iconv("UTF-8", "ISO-8859-1//TRANSLIT", $title);
         $slug = str_replace(["-","_"], " ", $slug);

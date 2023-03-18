@@ -4,30 +4,27 @@ namespace Sofa\Homework;
 
 include __DIR__.'/../src/Autoloader.php';
 
-use PDO;
-
-function insertData(Sport $sport): void
+function insertData ($conn, Sport $sport): void
 {
-    $dsn = 'pgsql:host=localhost;dbname=postgres';
-    $conn = new PDO($dsn.';user=sofa;password=sofa');
-
-    insertSport($conn, $sport);
+    insertSport ($conn, $sport);
     $sportID = $conn->lastInsertId();
 
-    foreach($sport->tournaments as $tournament){
-        insertTournament($conn, $tournament);
+    foreach ($sport->tournaments as $tournament)
+    {
+        insertTournament ($conn, $tournament);
         $tournamentID = $conn->lastInsertId();
-        insertSportTournament($conn, $sportID, $tournamentID);
+        insertSportTournament ($conn, $sportID, $tournamentID);
 
-        foreach($tournament->events as $event){
-            insertEvent($conn, $event);
+        foreach ($tournament->events as $event)
+        {
+            insertEvent ($conn, $event);
             $eventID = $conn->lastInsertId();
-            insertTournamentEvent($conn, $tournamentID, $eventID);
+            insertTournamentEvent ($conn, $tournamentID, $eventID);
         }
     }
 }
 
-function insertSport($conn, $sport): void
+function insertSport ($conn, $sport): void
 {
     $stmt = $conn->prepare('
         INSERT INTO sports (name, slug, external_id) 
@@ -37,7 +34,7 @@ function insertSport($conn, $sport): void
         $sport->id]);
 }
 
-function insertTournament($conn, $tournament): void
+function insertTournament ($conn, $tournament): void
 {
     $stmt = $conn->prepare('
         INSERT INTO tournaments (name, slug, external_id) 
@@ -47,7 +44,7 @@ function insertTournament($conn, $tournament): void
         $tournament->id]);
 }
 
-function insertSportTournament($conn, $sportID, $tournamentID): void
+function insertSportTournament ($conn, $sportID, $tournamentID): void
 {
     $stmt = $conn->prepare('
         INSERT INTO sport_tournaments (sport_id, tournament_id) 
@@ -55,7 +52,7 @@ function insertSportTournament($conn, $sportID, $tournamentID): void
     $stmt->execute([$sportID, $tournamentID]);
 }
 
-function insertEvent($conn, $event): void
+function insertEvent ($conn, $event): void
 {
     $stmt = $conn->prepare('
         INSERT INTO events (external_id, home_team_id, away_team_id, start_date, home_score, away_score) 
@@ -68,7 +65,7 @@ function insertEvent($conn, $event): void
         $event->awayScore]);
 }
 
-function insertTournamentEvent($conn, $tournamentID, $eventID): void
+function insertTournamentEvent ($conn, $tournamentID, $eventID): void
 {
     $stmt = $conn->prepare('
         INSERT INTO tournament_events (tournament_id, event_id) 
@@ -76,68 +73,73 @@ function insertTournamentEvent($conn, $tournamentID, $eventID): void
     $stmt->execute([$tournamentID, $eventID]);
 }
 
-function selectSports($conn): array
+function selectAllSports ($conn): array
 {
     return $conn->query("SELECT * FROM sports")->fetchAll();
 }
 
-function selectSportTournaments($conn, $sportSlug): array
+function selectSportTournaments ($conn, $sportSlug): array
 {
-    $stmt = $conn->prepare("SELECT * FROM sports WHERE slug=?");
-    $stmt->execute([$sportSlug]);
-    $sport = $stmt->fetch();
-
+    $sport = selectSportBySlug ($conn, $sportSlug);
     $stmt = $conn->prepare("SELECT * FROM sport_tournaments WHERE sport_id=?");
     $stmt->execute([$sport["id"]]);
     $tournaments = $stmt->fetchAll();
 
     $sportTournaments = array();
-    foreach($tournaments as $tournament){
-        $stmt = $conn->prepare("SELECT * FROM tournaments WHERE id=?");
-        $stmt->execute([$tournament["tournament_id"]]);
-        $sportTournament = $stmt->fetch();
+    foreach($tournaments as $tournament)
+    {
+        $sportTournament = selectTournamentByID ($conn, $tournament["tournament_id"]);
         $sportTournaments[] = $sportTournament;
     }
     return $sportTournaments;
 }
 
-function selectTournamentEvents($conn, $tournamentSlug): array
+function selectTournamentEvents ($conn, $tournamentSlug): array
 {
-    $stmt = $conn->prepare("SELECT * FROM tournaments WHERE slug=?");
-    $stmt->execute([$tournamentSlug]);
-    $tournament = $stmt->fetch();
-
+    $tournament = selectTournamentBySlug ($conn, $tournamentSlug);
     $stmt = $conn->prepare("SELECT * FROM tournament_events WHERE tournament_id=?");
     $stmt->execute([$tournament["id"]]);
     $events = $stmt->fetchAll();
 
     $tournamentEvents = array();
-    foreach($events as $event){
-        $stmt = $conn->prepare("SELECT * FROM events WHERE id=?");
-        $stmt->execute([$event["event_id"]]);
-        $tournamentEvent = $stmt->fetch();
+    foreach($events as $event)
+    {
+        $tournamentEvent = selectEvent ($conn, $event["event_id"]);
         $tournamentEvents[] = $tournamentEvent;
     }
     return $tournamentEvents;
 }
 
-function selectEvent($conn, $eventID): array
+function selectEvent ($conn, $eventID): array
 {
     $stmt = $conn->prepare("SELECT * FROM events WHERE id=?");
     $stmt->execute([$eventID]);
     return $stmt->fetch();
 }
 
-function selectSport($conn, $slug): array
+function selectSportBySlug ($conn, $slug): array
 {
     $stmt = $conn->prepare("SELECT * FROM sports WHERE slug=?");
     $stmt->execute([$slug]);
     return $stmt->fetch();
 }
 
-function selectTournament($conn, $slug): array
+function selectTournamentByID ($conn, $id): array
+{
+    $stmt = $conn->prepare("SELECT * FROM tournaments WHERE id=?");
+    $stmt->execute([$id]);
+    return $stmt->fetch();
+}
+
+function selectTournamentBySlug ($conn, $slug): array
 {
     $stmt = $conn->prepare("SELECT * FROM tournaments WHERE slug=?");
     $stmt->execute([$slug]);
     return $stmt->fetch();
+}
+
+function updateEventScore ($conn, $event): void
+{
+    $stmt = $conn->prepare("UPDATE events SET home_score=?, away_score=? WHERE id=?");
+    $stmt->execute([$event["home_score"],$event["away_score"],$event["id"]]);
 }
