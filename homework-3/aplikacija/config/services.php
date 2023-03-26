@@ -45,8 +45,8 @@ return static function (Container $container) {
     $container->addFactory(Slugger::class, static fn () => new Slugger());
 
     // @TODO: Zadatak 3
-    // $container->addFactory(
-    //     Connection::class,
-    //     static fn (Container $container) => new Connection($container->getParameter('parameter.name'))
-    // );
+    $container->addFactory(
+        Connection::class,
+        static fn (Container $container) => new Connection($container->getParameter('parameter.name'))
+    );
 };
