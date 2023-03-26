@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+require dirname(__DIR__).'/config/autoload.php';
+
+use App\Kernel;
+use SimpleFW\Console\Application;
+use SimpleFW\Console\Input;
+
+$application = new Application(new Kernel());
+
+$application->run(new Input($argv));

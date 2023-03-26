@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+require dirname(__DIR__).'/config/autoload.php';
+require __DIR__.'/AssertionException.php';
+require __DIR__.'/AssertTrait.php';
+
+$tests = isset($argv[1]) && is_file($argv[1]) ? [$argv[1]] : glob(__DIR__.'/*Test.php');
+
+foreach ($tests as $test) {
+    require $test;
+
+    $class = 'App\\Tests\\'.basename($test, '.php');
+
+    try {
+        (new $class())->run();
+    } catch (\App\Tests\AssertionException $e) {
+        echo sprintf("\033[31mTest \"%s\" failed :(\033[0m", $class), \PHP_EOL;
+        exit(1);
+    } catch (\Throwable $e) {
+        echo "\033[31mAn error occurred :O\033[0m", \PHP_EOL;
+        echo $e->getMessage(), \PHP_EOL;
+        echo $e->getTraceAsString(), \PHP_EOL;
+        exit(1);
+    }
+}
+
+echo "\033[32mAll tests passed :D\033[0m", \PHP_EOL;
